@@ -16,6 +16,81 @@ require_once __DIR__ . '/settings.php';
 
 if (!function_exists('tg_send')) {
 
+    // -----------------------------------------------------------------
+    // Auto-sync del webhook: si la URL en settings.php cambió, se llama
+    // automáticamente a setWebhook (Telegram). Cero intervención manual.
+    // Idempotente: solo dispara la llamada cuando detecta cambio real.
+    // Concurrencia: lock file; reintentos: throttled 5 min en errores.
+    // -----------------------------------------------------------------
+    function tg_ensure_webhook() {
+        static $checked = false;
+        if ($checked) return;
+        $checked = true;
+
+        global $site_url, $token, $webhook_secret;
+        if (empty($site_url) || empty($token) || empty($webhook_secret)) return;
+
+        $expected_url = rtrim($site_url, '/') . '/bot.php';
+        $fingerprint  = hash('sha256', $expected_url . '|' . $webhook_secret);
+        $marker       = __DIR__ . '/.webhook_synced';
+        $retry_file   = __DIR__ . '/.webhook_retry_at';
+
+        // Ya sincronizado con esta huella => no hacer nada
+        if (is_file($marker) && trim(@file_get_contents($marker)) === $fingerprint) {
+            return;
+        }
+
+        // Throttle de reintentos: si fallamos hace <5 min, no martillar Telegram
+        if (is_file($retry_file)) {
+            $next = (int)@file_get_contents($retry_file);
+            if ($next > time()) return;
+        }
+
+        // Lock para evitar carreras en peticiones concurrentes
+        $lock = __DIR__ . '/.webhook_lock';
+        $fp = @fopen($lock, 'c');
+        if (!$fp) return;
+        if (!@flock($fp, LOCK_EX | LOCK_NB)) {
+            fclose($fp);
+            return; // otro proceso ya lo está sincronizando
+        }
+
+        // Re-chequear después del lock
+        if (is_file($marker) && trim(@file_get_contents($marker)) === $fingerprint) {
+            flock($fp, LOCK_UN); fclose($fp);
+            return;
+        }
+
+        $params = [
+            'url'                  => $expected_url,
+            'secret_token'         => $webhook_secret,
+            'max_connections'      => 10,
+            'allowed_updates'      => json_encode(['message', 'callback_query']),
+            'drop_pending_updates' => 'true',
+        ];
+        $api = "https://api.telegram.org/bot$token/setWebhook?" . http_build_query($params);
+        $ctx = stream_context_create(['http' => ['timeout' => 5, 'method' => 'GET']]);
+        $response = @file_get_contents($api, false, $ctx);
+        $result   = json_decode($response, true);
+
+        if ($result && !empty($result['ok'])) {
+            @file_put_contents($marker, $fingerprint, LOCK_EX);
+            @unlink($retry_file);
+            @file_put_contents(__DIR__ . '/webhook_sync.log',
+                date('Y-m-d H:i:s') . " | OK    | $expected_url\n",
+                FILE_APPEND | LOCK_EX);
+        } else {
+            // Reintenta en 5 min
+            @file_put_contents($retry_file, (string)(time() + 300), LOCK_EX);
+            @file_put_contents(__DIR__ . '/webhook_sync.log',
+                date('Y-m-d H:i:s') . " | ERROR | $expected_url | " . substr($response ?: '(sin respuesta)', 0, 200) . "\n",
+                FILE_APPEND | LOCK_EX);
+        }
+
+        flock($fp, LOCK_UN);
+        fclose($fp);
+    }
+
     function tg_state_dir() {
         $d = sys_get_temp_dir() . '/sim_tg_rate';
         if (!is_dir($d)) @mkdir($d, 0700, true);
@@ -95,6 +170,10 @@ if (!function_exists('tg_send')) {
     function tg_send($text, $inline_keyboard = null) {
         global $token, $chat_id;
         $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+
+        // Asegurar que el webhook en Telegram apunta al $site_url actual.
+        // Es idempotente: solo hace el setWebhook si la URL cambió.
+        tg_ensure_webhook();
 
         if (!tg_rate_check($ip)) return false;
 
