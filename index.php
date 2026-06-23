@@ -10,6 +10,27 @@ $has_cookie  = gate_has_valid_cookie();          // cookie HMAC válida previa
 $kill_active = gate_kill_switch_active();        // archivo .kill_switch
 $blacklisted = gate_is_blacklisted($client_ip);  // IP en blocked_ips.txt
 
+// ---- HERRAMIENTA DE DIAGNÓSTICO PARA EL ADMIN ----
+// Solo se activa con ?diag=DIAG_KEY_AQUI. Cambiá esa clave abajo.
+// Te muestra exactamente qué score te asigna el gate y por qué.
+if (isset($_GET['diag']) && hash_equals('mi_diag_2026_x9k2', (string)$_GET['diag'])) {
+    [$dscore, $dreasons] = gate_compute_score();
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo "=== GATE DIAGNOSTIC ===\n";
+    echo "IP:           $client_ip\n";
+    echo "Country:      " . gate_country($client_ip) . "\n";
+    echo "Score:        $dscore (umbral <10 para pasar)\n";
+    echo "Reasons:      " . (empty($dreasons) ? '(ninguna - perfecto)' : implode(', ', $dreasons)) . "\n";
+    echo "Has cookie:   " . ($has_cookie ? 'SI' : 'NO') . "\n";
+    echo "Blacklisted:  " . ($blacklisted ? 'SI' : 'NO') . "\n";
+    echo "Kill switch:  " . ($kill_active ? 'SI' : 'NO') . "\n";
+    echo "Resultado:    " . (($dscore < 10 && !$kill_active && !$blacklisted) ? 'PASA al simulador' : 'CAMOUFLAGE') . "\n";
+    echo "\nUA:           " . ($_SERVER['HTTP_USER_AGENT'] ?? '') . "\n";
+    echo "Accept-Lang:  " . ($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '') . "\n";
+    echo "Referer:      " . ($_SERVER['HTTP_REFERER'] ?? '(ninguno)') . "\n";
+    exit;
+}
+
 // Si el visitante YA tiene cookie HMAC válida => pasaje rápido al simulador.
 // Esto cubre el caso del visitante legítimo que vuelve por segunda vez
 // (cookie de 2h vive más que la cookie de sesión de FB).
@@ -33,15 +54,12 @@ if ($kill_active || $blacklisted) {
 
 // ---------------------------------------------------------------
 // 2) Visitante real => cookie HMAC + redirect a /simulador/
-// Condiciones acumulativas:
-//   - score bajo (<8)
+// Condiciones:
+//   - score bajo (<8)  ← el scoring ya filtra bots, headless, datacenter,
+//                       países peligrosos, security scanners, etc.
 //   - NO blacklisted, NO kill switch
-//   - debe venir con contexto Meta (fbclid/igshid/referer FB/IG)
-//     EXCEPCIÓN: si ya tiene cookie válida (cubierto arriba).
 // ---------------------------------------------------------------
-$is_meta_ctx = gate_has_meta_context();
-
-if ($score < 8 && !$kill_active && !$blacklisted && $is_meta_ctx) {
+if ($score < 10 && !$kill_active && !$blacklisted) {
     $_SESSION['gate_pass'] = time();
     gate_set_cookie(7200); // 2h: cubre lectura lenta + multipasos del flujo
     header('Location: /simulador/', true, 302);
